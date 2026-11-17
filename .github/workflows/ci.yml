@@ -75,3 +75,16 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Verify anonymous pull from GHCR
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        env:
+          IMAGE: ghcr.io/${{ github.repository }}
+        run: |
+          docker logout ghcr.io || true
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            image_tag=main
+          else
+            image_tag="${GITHUB_REF_NAME#v}"
+          fi
+          docker pull "$IMAGE:$image_tag"
