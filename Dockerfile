@@ -6,17 +6,19 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-ARG VITE_API_BASE=http://localhost:8000
-ENV VITE_API_BASE=$VITE_API_BASE
 RUN npm run build
 
 FROM nginx:1.27-alpine AS runtime
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ENV PORT=10000 \
+    NGINX_ENVSUBST_FILTER=^PORT$
+
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist/ /usr/share/nginx/html/
+COPY runtime-config.js.template /usr/share/nginx/html/runtime-config.js.template
 
-EXPOSE 80
+EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://127.0.0.1/ || exit 1
+  CMD sh -c 'wget --quiet --tries=1 --spider "http://127.0.0.1:${PORT}/health" || exit 1'
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "envsubst '${VITE_API_BASE}' < /usr/share/nginx/html/runtime-config.js.template > /usr/share/nginx/html/runtime-config.js && exec nginx -g 'daemon off;'"]

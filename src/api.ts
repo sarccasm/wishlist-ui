@@ -1,7 +1,18 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from './store/auth'
 
-const API_BASE = import.meta.env.VITE_API_BASE as string || 'http://localhost:8000'
+declare global {
+  interface Window {
+    __WISHLIST_CONFIG__?: {
+      apiBase?: string
+    }
+  }
+}
+
+const API_BASE =
+  window.__WISHLIST_CONFIG__?.apiBase ||
+  import.meta.env.VITE_API_BASE ||
+  'http://localhost:8000'
 
 const api = axios.create({
   baseURL: API_BASE,
