@@ -21,4 +21,4 @@ EXPOSE 10000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD sh -c 'wget --quiet --tries=1 --spider "http://127.0.0.1:${PORT}/health" || exit 1'
 
-CMD ["sh", "-c", "envsubst '${VITE_API_BASE}' < /usr/share/nginx/html/runtime-config.js.template > /usr/share/nginx/html/runtime-config.js && exec nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "envsubst '${VITE_API_BASE}' < /usr/share/nginx/html/runtime-config.js.template > /usr/share/nginx/html/runtime-config.js && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
